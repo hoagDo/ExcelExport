@@ -16,42 +16,33 @@ class QuestionExtractorApp:
         self.root.title("Công cụ Trích xuất Câu hỏi từ Văn bản sang Excel")
         self.root.geometry("1000x700")
         
-        # Khởi tạo các component
         self.text_processor = TextProcessor()
         self.excel_handler = ExcelHandler()
         self.logger = Logger()
         self.deduplicator = Deduplicator(policy='allow', logger=self.logger)  # Mặc định là allow để test
         
-        # Queue cho thread
         self.queue = queue.Queue()
         
-        # Biến lưu trữ
         self.questions = []
         self.stats = {'written': 0, 'skipped': 0, 'merged': 0}
         
-        # Thiết lập giao diện
         self.setup_ui()
         
-        # Bắt đầu kiểm tra queue
         self.root.after(100, self.check_queue)
     
     def setup_ui(self):
-        # Style
         style = ttk.Style()
         style.theme_use('clam')
         
-        # Main frame
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Cấu hình grid
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(1, weight=1)
         main_frame.rowconfigure(5, weight=1)
         
-        # Tiêu đề
         title_label = ttk.Label(
             main_frame, 
             text="CÔNG CỤ TRÍCH XUẤT CÂU HỎI SANG EXCEL",
@@ -60,7 +51,6 @@ class QuestionExtractorApp:
         )
         title_label.grid(row=0, column=0, columnspan=3, pady=(0, 20))
         
-        # Khung nhập văn bản
         input_frame = ttk.LabelFrame(main_frame, text="Nhập văn bản", padding="10")
         input_frame.grid(row=1, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S), pady=(0, 10))
         input_frame.columnconfigure(0, weight=1)
@@ -75,7 +65,6 @@ class QuestionExtractorApp:
         )
         self.text_input.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Nút chức năng
         button_frame = ttk.Frame(main_frame)
         button_frame.grid(row=2, column=0, columnspan=3, pady=(0, 10))
         
@@ -93,7 +82,6 @@ class QuestionExtractorApp:
             btn = ttk.Button(button_frame, text=text, command=command)
             btn.grid(row=0, column=i, padx=2)
         
-        # Progress bar
         self.progress_var = tk.DoubleVar()
         self.progress_bar = ttk.Progressbar(
             main_frame, 
@@ -103,21 +91,17 @@ class QuestionExtractorApp:
         )
         self.progress_bar.grid(row=3, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 10))
         
-        # Status label
         self.status_label = ttk.Label(main_frame, text="Sẵn sàng")
         self.status_label.grid(row=4, column=0, columnspan=3, sticky=tk.W, pady=(0, 10))
         
-        # Khung preview
         preview_frame = ttk.LabelFrame(main_frame, text="Thông tin xử lý", padding="10")
         preview_frame.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E, tk.N, tk.S))
         preview_frame.columnconfigure(0, weight=1)
         preview_frame.rowconfigure(0, weight=1)
         
-        # Notebook cho nhiều tab preview
         self.notebook = ttk.Notebook(preview_frame)
         self.notebook.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # Tab tổng quan
         overview_frame = ttk.Frame(self.notebook)
         self.overview_text = scrolledtext.ScrolledText(
             overview_frame,
@@ -129,7 +113,6 @@ class QuestionExtractorApp:
         self.overview_text.pack(fill=tk.BOTH, expand=True)
         self.notebook.add(overview_frame, text="Tổng quan")
         
-        # Tab cấu trúc template
         template_frame = ttk.Frame(self.notebook)
         template_text = scrolledtext.ScrolledText(
             template_frame,
@@ -143,7 +126,6 @@ class QuestionExtractorApp:
         template_text.pack(fill=tk.BOTH, expand=True)
         self.notebook.add(template_frame, text="Cấu trúc Template")
         
-        # Tab xem trước
         preview_text_frame = ttk.Frame(self.notebook)
         self.preview_text = scrolledtext.ScrolledText(
             preview_text_frame,
@@ -225,7 +207,6 @@ LƯU Ý:
         messagebox.showinfo("Thông tin Template", info)
     
     def open_settings(self):
-        # Tạo cửa sổ cài đặt
         settings_window = tk.Toplevel(self.root)
         settings_window.title("Cài đặt")
         settings_window.geometry("400x300")
@@ -264,26 +245,21 @@ LƯU Ý:
             messagebox.showwarning("Cảnh báo", "Vui lòng nhập văn bản!")
             return
         
-        # Hiển thị cửa sổ debug
         debug_window = tk.Toplevel(self.root)
         debug_window.title("Debug - Kiểm tra trích xuất")
         debug_window.geometry("800x600")
         
-        # Text widget để hiển thị kết quả
         debug_text = scrolledtext.ScrolledText(debug_window, wrap=tk.WORD, width=90, height=30)
         debug_text.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
         
-        # Phân tích văn bản
         debug_text.insert('1.0', "=== PHÂN TÍCH VĂN BẢN ===\n\n")
         debug_text.insert('end', f"Độ dài văn bản: {len(text)} ký tự\n")
         
-        # Kiểm tra xem có pattern "Câu X." không
         matches = re.findall(r'Câu\s*\d+[\.:\)]', text, re.IGNORECASE)
         debug_text.insert('end', f"\nTìm thấy {len(matches)} pattern 'Câu X.' trong văn bản\n")
         for i, match in enumerate(matches[:10], 1):
             debug_text.insert('end', f"  {i}. {match}\n")
         
-        # Kiểm tra bằng phương pháp smart_extract
         debug_text.insert('end', "\n=== KẾT QUẢ TRÍCH XUẤT ===\n")
         
         try:
@@ -302,15 +278,12 @@ LƯU Ý:
                 else:
                     debug_text.insert('end', "\nKHÔNG TÌM THẤY CÂU HỎI NÀO!\n")
                     
-                    # Kiểm tra lý do
                     debug_text.insert('end', "\n=== PHÂN TÍCH LỖI ===\n")
                     
-                    # Kiểm tra nếu văn bản có chứa "Câu" nhưng không phải định dạng đúng
                     if "Câu" in text:
                         debug_text.insert('end', "Tìm thấy từ 'Câu' trong văn bản nhưng không trích xuất được.\n")
                         debug_text.insert('end', "Có thể do định dạng không đúng.\n")
                     
-                    # Hiển thị mẫu văn bản để kiểm tra
                     debug_text.insert('end', "\n=== MẪU VĂN BẢN (100 ký tự đầu) ===\n")
                     debug_text.insert('end', text[:100] + "...\n")
             else:
@@ -326,10 +299,8 @@ LƯU Ý:
             messagebox.showwarning("Cảnh báo", "Vui lòng nhập văn bản!")
             return
         
-        # Reset stats
         self.stats = {'written': 0, 'skipped': 0, 'merged': 0}
         
-        # Chạy trong thread riêng
         thread = threading.Thread(target=self._process_thread, args=(text,))
         thread.daemon = True
         thread.start()
@@ -339,11 +310,9 @@ LƯU Ý:
         self.queue.put(('progress', 10))
         
         try:
-            # Trích xuất câu hỏi bằng smart_extract
             if hasattr(self.text_processor, 'smart_extract'):
                 raw_questions = self.text_processor.smart_extract(text)
             else:
-                # Fallback nếu không có smart_extract
                 raw_questions = self.text_processor.extract_questions_from_text(text)
             
             if not raw_questions:
@@ -354,7 +323,6 @@ LƯU Ý:
             self.queue.put(('status', f"Đã trích xuất {len(raw_questions)} câu hỏi"))
             self.queue.put(('progress', 40))
             
-            # Xử lý trùng lặp
             processed_questions = []
             
             for raw_q in raw_questions:
@@ -382,25 +350,20 @@ LƯU Ý:
             
             self.queue.put(('progress', 70))
             
-            # Xuất Excel
             export_result = self.excel_handler.write_questions(processed_questions)
             
             self.queue.put(('progress', 90))
             
-            # Xuất summary
             summary_path = self.excel_handler.export_summary(processed_questions, self.stats)
             
             self.queue.put(('progress', 100))
             self.queue.put(('status', f"Đã xuất {len(processed_questions)} câu hỏi sang Excel"))
             
-            # Cập nhật UI
             self.questions = processed_questions
             self.queue.put(('update_ui', processed_questions))
             
-            # Ghi log
             self.logger.log_export_stats(self.stats)
             
-            # Hiển thị thông báo thành công
             self.queue.put(('message', 
                 f"Xuất thành công!\n\n"
                 f"• Câu hỏi đã trích xuất: {len(raw_questions)}\n"
@@ -484,7 +447,6 @@ VÍ DỤ CÂU HỎI ĐÃ XỬ LÝ:"""
     def check_queue(self):
         """Kiểm tra queue - SỬA LỖI RECURSION"""
         try:
-            # Xử lý tất cả message có sẵn trong queue
             while True:
                 try:
                     msg_type, data = self.queue.get_nowait()
@@ -508,7 +470,6 @@ VÍ DỤ CÂU HỎI ĐÃ XỬ LÝ:"""
         except Exception as e:
             print(f"Lỗi trong check_queue: {e}")
         
-        # Lên lịch kiểm tra lại sau 100ms
         self.root.after(100, self.check_queue)
 
 
