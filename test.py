@@ -38,23 +38,23 @@ def run_test():
     processor = TextProcessor()
     questions = processor.extract_questions_from_text(TEST_DATA)
     
-    print(f"👉 Tìm thấy: {len(questions)} câu hỏi.\n")
+    print(f" Tìm thấy: {len(questions)} câu hỏi.\n")
     
     for q in questions:
-        print(f"🟦 [CÂU {q['question_number']}]")
-        print(f"   🔻 Nội dung: \"{q['question_text']}\"")
+        print(f" [CÂU {q['question_number']}]")
+        print(f"    Nội dung: \"{q['question_text']}\"")
         
         opts = q['options']
         # In các đáp án tìm được
-        print(f"   ✅ A: {opts[0]}")
-        print(f"   ✅ B: {opts[1]}")
-        print(f"   ✅ C: {opts[2]}")
-        print(f"   ✅ D: {opts[3]}")
+        print(f"    A: {opts[0]}")
+        print(f"    B: {opts[1]}")
+        print(f"    C: {opts[2]}")
+        print(f"    D: {opts[3]}")
         
         if opts[2]: # Nếu có đáp án C
-             print("   🌟 TRẠNG THÁI: ĐÃ LẤY ĐƯỢC CÂU C!")
+             print("    TRẠNG THÁI: ĐÃ LẤY ĐƯỢC CÂU C!")
         else:
-             print("   ❌ LỖI: Vẫn mất câu C")
+             print("    LỖI: Vẫn mất câu C")
              
         print("-" * 50)
 
