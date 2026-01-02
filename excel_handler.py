@@ -29,7 +29,6 @@ class ExcelHandler:
             ws = wb.active
             ws.title = "Questions"
             
-            # Ghi headers
             for col, header in enumerate(self.default_headers, start=1):
                 cell = ws.cell(row=1, column=col, value=header)
                 cell.font = Font(bold=True)
@@ -37,7 +36,6 @@ class ExcelHandler:
                 cell.font = Font(color="FFFFFF", bold=True)
                 cell.alignment = Alignment(horizontal="center")
             
-            # Đặt độ rộng cột
             column_widths = [60, 15, 40, 40, 40, 40, 15, 15, 30, 50]
             for i, width in enumerate(column_widths, start=1):
                 ws.column_dimensions[get_column_letter(i)].width = width
@@ -55,42 +53,33 @@ class ExcelHandler:
         """Ghi câu hỏi vào file Excel"""
         output_path = output_path or self.template_path
         
-        # Đảm bảo template tồn tại
         self.create_template_if_not_exists()
         
-        # Mở workbook
         wb = load_workbook(output_path)
         if "Questions" not in wb.sheetnames:
             ws = wb.create_sheet("Questions")
         else:
             ws = wb["Questions"]
         
-        # Tìm dòng bắt đầu
         start_row = self.get_next_empty_row(ws)
         
-        # Ghi dữ liệu
         for i, question_data in enumerate(questions):
             row = start_row + i
             
-            # Ghi câu hỏi
             ws.cell(row=row, column=1, value=question_data['question_text'])
             
-            # Ghi loại câu hỏi
             ws.cell(row=row, column=2, value="Multiple Choice")
             
-            # Ghi các lựa chọn
             options = question_data['options']
             for j in range(4):
                 option_value = options[j] if j < len(options) else ""
                 ws.cell(row=row, column=3 + j, value=option_value)
             
-            # Định dạng hàng
             fill_color = "FFFFFF" if row % 2 == 0 else "F2F2F2"
             for col in range(1, 11):
                 cell = ws.cell(row=row, column=col)
                 cell.fill = PatternFill(start_color=fill_color, end_color=fill_color, fill_type="solid")
                 
-                # Đặt border
                 thin_border = Border(
                     left=Side(style='thin'),
                     right=Side(style='thin'),
@@ -99,7 +88,6 @@ class ExcelHandler:
                 )
                 cell.border = thin_border
         
-        # Lưu file
         wb.save(output_path)
         
         return {
@@ -114,7 +102,6 @@ class ExcelHandler:
         ws = summary_wb.active
         ws.title = "Summary"
         
-        # Ghi thông tin tổng quan
         ws.append(["Export Summary", ""])
         ws.append(["Export Time", datetime.now().strftime("%Y-%m-%d %H:%M:%S")])
         ws.append(["Total Questions Processed", len(questions)])
@@ -123,7 +110,6 @@ class ExcelHandler:
         ws.append(["Merged", stats.get('merged', 0)])
         ws.append(["", ""])
         
-        # Ghi danh sách câu hỏi
         ws.append(["Question List", ""])
         headers = ["No.", "Question Text", "Options Count"]
         ws.append(headers)
@@ -135,7 +121,6 @@ class ExcelHandler:
                 len(q['options'])
             ])
         
-        # Định dạng
         for row in ws.iter_rows(min_row=1, max_row=7, max_col=2):
             for cell in row:
                 cell.font = Font(bold=True)
