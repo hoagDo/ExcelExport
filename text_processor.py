@@ -9,9 +9,6 @@ class TextProcessor:
     def extract_questions_from_text(self, text):
         questions = []
         
-        # --- REGEX HAI CHẾ ĐỘ (V11) ---
-        # 1. Số đầu dòng (1., 2.) -> Tránh bắt nhầm năm/trang
-        # 2. Chữ "Câu" (Câu 1, Câu 2) -> Bắt mọi nơi
         pattern = r'(?:^|[\n\r])\s*\d+[.:)]|Câu\s*\d+(?:[.:,)|-]|\s)'
         
         question_matches = list(re.finditer(pattern, text, re.IGNORECASE))
@@ -47,15 +44,13 @@ class TextProcessor:
 
     def _process_question_block_smart(self, block):
         try:
-            # 1. Trích xuất số câu
+
             num_match = re.search(r'(?:Câu\s*)?(\d+)', block[:15], re.IGNORECASE)
             question_number = int(num_match.group(1)) if num_match else None
             
-            # Chuẩn hóa
             clean_block = re.sub(r'\n', ' ', block)
             clean_block = re.sub(r'\s+', ' ', clean_block)
             
-            # 2. Tách Đáp án (Last Win Logic)
             candidates = list(re.finditer(r'(?<=[\s])[aA][.:)]', clean_block))
             best_candidate = None
             max_score = -1
@@ -80,22 +75,16 @@ class TextProcessor:
                 raw_question = clean_block
                 raw_options = ""
 
-            # 3. LÀM SẠCH CÂU HỎI (CẬP NHẬT MỚI NHẤT)
-            # Regex cũ: [.:)\s-]* --> Thiếu dấu phẩy (,) và gạch đứng (|)
-            # Regex mới: [.:,)|\]\s-]* --> Đã thêm , | ]
-            
-            # Logic: Xóa [Dấu chấm/space đầu] + [Câu (nếu có)] + [Số] + [DẤU RÁC]
             temp_q = re.sub(r'^[\.\s]*(?:Câu\s*)?\d+[.:,)|\]\s-]*', '', raw_question, flags=re.IGNORECASE).strip()
             
             if raw_question.strip().startswith('"') or raw_question.strip().startswith('“'):
                  pass 
             else:
-                 # Xóa số rác dính liền
+
                  temp_q = re.sub(r'^\d+\s*', '', temp_q).strip()
             
             question_text = self.normalizer.clean_question_text(temp_q)
 
-            # 4. Trích xuất Options (Slicing - Bắt đủ A,B,C,D)
             options_dict = {}
             targets = ['A', 'B', 'C', 'D']
             
